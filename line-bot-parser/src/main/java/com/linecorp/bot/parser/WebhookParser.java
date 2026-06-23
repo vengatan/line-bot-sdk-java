@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 LINE Corporation
+ * Copyright 2023 LINE Corporation
  *
  * LINE Corporation licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -16,38 +16,53 @@
 
 package com.linecorp.bot.parser;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.slf4j.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.linecorp.bot.model.event.CallbackRequest;
-import com.linecorp.bot.model.objectmapper.ModelObjectMapper;
+import com.linecorp.bot.jackson.ModelObjectMapper;
+import com.linecorp.bot.webhook.model.CallbackRequest;
 
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class WebhookParser {
     public static final String SIGNATURE_HEADER_NAME = "X-Line-Signature";
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(WebhookParser.class);
 
     private final ObjectMapper objectMapper = ModelObjectMapper.createNewObjectMapper();
     private final SignatureValidator signatureValidator;
+    private final SkipSignatureVerificationSupplier skipSignatureVerificationSupplier;
 
     /**
      * Creates a new instance.
      *
      * @param signatureValidator LINE messaging API's signature validator
      */
-    public WebhookParser(@NonNull SignatureValidator signatureValidator) {
-        this.signatureValidator = signatureValidator;
+    public WebhookParser(SignatureValidator signatureValidator) {
+        this.signatureValidator = requireNonNull(signatureValidator);
+        this.skipSignatureVerificationSupplier = FixedSkipSignatureVerificationSupplier.of(false);
+    }
+
+    /**
+     * Creates a new instance.
+     *
+     * @param signatureValidator LINE messaging API's signature validator
+     * @param skipSignatureVerificationSupplier Supplier to determine whether to skip signature verification
+     */
+    public WebhookParser(SignatureValidator signatureValidator,
+                         SkipSignatureVerificationSupplier skipSignatureVerificationSupplier) {
+        this.signatureValidator = requireNonNull(signatureValidator);
+        this.skipSignatureVerificationSupplier = requireNonNull(skipSignatureVerificationSupplier);
     }
 
     /**
      * Parses a request.
      *
      * @param signature X-Line-Signature header.
-     * @param payload Request body.
+     * @param payload   Request body.
      * @return Parsed result. If there's an error, this method sends response.
      * @throws WebhookParseException There's an error around signature.
      */
@@ -61,12 +76,13 @@ public class WebhookParser {
             log.debug("got: {}", new String(payload, StandardCharsets.UTF_8));
         }
 
-        if (!signatureValidator.validateSignature(payload, signature)) {
+        if (!skipSignatureVerificationSupplier.getAsBoolean()
+            && !signatureValidator.validateSignature(payload, signature)) {
             throw new WebhookParseException("Invalid API signature");
         }
 
         final CallbackRequest callbackRequest = objectMapper.readValue(payload, CallbackRequest.class);
-        if (callbackRequest == null || callbackRequest.getEvents() == null) {
+        if (callbackRequest == null || callbackRequest.events() == null) {
             throw new WebhookParseException("Invalid content");
         }
         return callbackRequest;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 LINE Corporation
+ * Copyright 2023 LINE Corporation
  *
  * LINE Corporation licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -19,9 +19,9 @@ package com.linecorp.bot.parser;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.util.Base64Utils;
 
 public class LineSignatureValidatorTest {
     private static final String channelSecret = "SECRET";
@@ -51,7 +51,7 @@ public class LineSignatureValidatorTest {
         byte[] headerSignature = lineSignatureValidator
                 .generateSignature(httpRequestBody.getBytes(StandardCharsets.UTF_8));
 
-        assertThat(Base64Utils.encodeToString(headerSignature))
+        assertThat(Base64.getEncoder().encodeToString(headerSignature))
                 .isEqualTo("3q8QXTAGaey18yL8FWTqdVlbMr6hcuNvM4tefa0o9nA=");
     }
 
