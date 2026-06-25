@@ -1,4 +1,4 @@
-## How to contribute to LINE Bot SDK for Java project
+# How to contribute to LINE Bot SDK for Java project
 
 First of all, thank you so much for taking your time to contribute! LINE Bot SDK for Java is not very different from any other open
 source projects you are aware of. It will be amazing if you could help us by doing any of the following:
@@ -8,72 +8,79 @@ source projects you are aware of. It will be amazing if you could help us by doi
 - Ask a question using [the issue tracker](https://github.com/line/line-bot-sdk-java/issues).
 - Contribute your work by sending [a pull request](https://github.com/line/line-bot-sdk-java/pulls).
 
+## Development
+
+### Install dependencies
+
+This project uses Gradle as the build system. Make sure you have JDK installed (JDK 17 or later is required).
+
+```bash
+./gradlew build
+```
+
+This will download all dependencies, check for the build and build the project.
+
+### Understand the project structure
+
+The project structure is as follows:
+- `clients`: The main client libraries.
+- `line-bot-webhook`: Webhook event definition.
+- `line-bot-parser`: Webhook Parser and its Signature Verification libraries.
+- `line-bot-jackson`: Jackson customizations for the SDK.
+- `generator`: Code generator for the libraries.
+- `samples`: Example projects that use the library.
+- `tests`: internal test for gradle.
+- `spring-boot`: Spring Boot integration components.
+
+### Edit pebble template
+
+Almost all code is generated with [pebble templates](https://pebbletemplates.io/), based on [line-openapi](https://github.com/line/line-openapi)'s YAML files.
+Thus, you can't edit the source code under the `clients` and `line-bot-webhook` directory directly.
+
+You need to edit the pebble templates under [generator/src/main/resources/line-java-codegen](generator/src/main/resources/line-java-codegen) instead.
+
+After editing the templates, run `python generate-code.py` to generate the code, and then commit all affected files.
+If not, CI status will be red.
+
+### Add unit tests
+
+We use JUnit for unit testing. Please add tests to verify your changes continuously.
+
+Especially for bug fixes, please follow this flow for testing and development:
+1. Write a test before making changes to the library and confirm that the test fails.
+2. Modify the code of the library.
+3. Run the test again and confirm that it passes thanks to your changes.
+
+### Run your code in your local
+
+The [sample projects](samples/) can be used to test your changes locally. You can run them with Gradle:
+
+```bash
+./gradlew :samples:sample-spring-boot-echo:bootRun
+```
+
+### Run all CI tasks locally
+
+You can run all CI tasks locally by running:
+
+```bash
+./gradlew build
+```
+
+#### Documentation
+
+We use JavaDoc to generate and maintain our code documentation.
+Run the following command to generate JavaDoc:
+
+```bash
+./gradlew javadoc
+```
+
+**Please make sure your new or modified code is also covered by proper JavaDoc comments.**
+Good documentation ensures that contributors and users can easily read and understand how the methods and classes work.
+
 ### Contributor license agreement
 
 When you are sending a pull request and it's a non-trivial change beyond fixing typos, please make sure to sign
 [the ICLA (individual contributor license agreement)](https://cla-assistant.io/line/line-bot-sdk-java). Please
 [contact us](mailto:dl_oss_dev@linecorp.com) if you need the CCLA (corporate contributor license agreement).
-
-# Detect outdated dependencies
-
-Run `./gradlew dependencyUpdates -Drevision=release` checks dependency list 
-and reports outdated dependencies excepts SpringManaged dependency.
-
-## ./gradlew dependencyUpdates example
-```
-% ./gradlew dependencyUpdates -Drevision=release
-Download https://plugins.gradle.org/m2/org/springframework/boot/spring-boot-gradle-plugin/maven-metadata.xml
-
-> Task :dependencyUpdates
-
-------------------------------------------------------------
-: Project Dependency Updates (report to plain text file)
-------------------------------------------------------------
-
-The following dependencies are using the latest release version:
- - com.github.ben-manes:gradle-versions-plugin:0.20.0
- - com.github.stefanbirkner:system-rules:1.18.0
- - com.squareup.okhttp3:logging-interceptor:3.11.0
- - com.squareup.okhttp3:mockwebserver:3.11.0
- - com.squareup.retrofit2:converter-jackson:2.4.0
- - com.squareup.retrofit2:retrofit:2.4.0
- - io.franzbecker:gradle-lombok:1.14
- - io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE
- - org.projectlombok:lombok:1.18.2
- - org.slf4j:slf4j-api:1.7.25
-
-The following dependencies have later release versions:
- - com.google.guava:guava [25.1-jre -> 26.0-jre]
-     https://github.com/google/guava
- - gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin [1.6.2 -> 1.6.3]
- - gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties [1.4.17 -> 1.5.2]
- - io.spring.gradle:propdeps-plugin [0.0.9.RELEASE -> 0.0.10.RELEASE]
- - org.jetbrains.kotlin:kotlin-gradle-plugin [1.2.61 -> 1.2.70]
-     https://kotlinlang.org/
- - org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable [1.2.61 -> 1.2.70]
-     https://kotlinlang.org/
- - org.jetbrains.kotlin:kotlin-stdlib-jdk8 [1.2.61 -> 1.2.70]
-     https://kotlinlang.org/
-
-Failed to determine the latest version for the following dependencies (use --info for details):
- - com.fasterxml.jackson.core:jackson-annotations
- - com.fasterxml.jackson.core:jackson-core
- - com.fasterxml.jackson.core:jackson-databind
- - com.fasterxml.jackson.datatype:jackson-datatype-jsr310
- - com.fasterxml.jackson.module:jackson-module-parameter-names
- - javax.servlet:javax.servlet-api
- - javax.validation:validation-api
- - org.hibernate:hibernate-validator
- - org.springframework.boot:spring-boot-autoconfigure
- - org.springframework.boot:spring-boot-configuration-processor
- - org.springframework.boot:spring-boot-gradle-plugin
- - org.springframework.boot:spring-boot-starter-logging
- - org.springframework.boot:spring-boot-starter-test
- - org.springframework.boot:spring-boot-starter-web
-
-Gradle updates:
- - Gradle: [4.8 -> 4.10.1]
-
-Generated report file build/dependencyUpdates/report.txt
-```
-

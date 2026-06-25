@@ -2,9 +2,12 @@
 target/
 build/
 out/
+/**/reports/
+/reports/
 
 # gradle
 /.gradle/
+/*/.gradle/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
@@ -57,3 +60,7 @@ integration_test_settings.yml
 
 # Mac
 .DS_Store
+bin/
+
+# github workflow
+pr_info.json
